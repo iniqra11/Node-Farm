@@ -3,6 +3,9 @@ const http = require('http'); // this module gives networking capabilities
 const fs = require('fs');
 const { report } = require('process');
 
+// For parsing the url and getting the request params
+const url = require('url');
+
 // We can use syncronous function to read here because it is a top level code and would be executed once and not for every request
 
 // Reading the html templates to render the view
@@ -38,8 +41,18 @@ const replaceTemplate = (template,product) =>
 
 const server = http.createServer((request,response) => {
 
-    const path = request.url;
-    switch(path)
+    console.log(url.parse(request.url,true));
+
+    /*
+    when request.url is /product?id=1, then we parse it using the url module,
+    query -> {id : '0'}
+    pathname -> /product
+
+    */
+    const {query, pathname} = url.parse(request.url,true); // var name must be the same as in the returned object by url.parse
+
+    
+    switch(pathname)
     {
         case '/overview':
             // Overview Page
@@ -53,7 +66,11 @@ const server = http.createServer((request,response) => {
             response.end(output);
             break;
         case '/product':
-            response.end('Product');
+            console.log(query);
+            const product = dataObjects[query.id];
+            response.writeHead(200,{'Content-type':'text/html'});
+            const productDetails = replaceTemplate(productTemplate,product);
+            response.end(productDetails);
             break;
         case '/':
             response.end('Overview');
